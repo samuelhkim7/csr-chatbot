@@ -95,10 +95,13 @@ csr-chatbot/
 - [x] Verification: actual responses printed and reviewed; 11 zones, 3 services, helpful unknown fallback
 - [x] Commits: `test: add FAQ handler tests`, `feat: add FAQ handler with derived locations and services`
 
-### ☐ Phase 5 — Chatbot Orchestrator + CLI (~20 min)
-- [ ] Tests first: `test_chatbot.py`
-- [ ] `chatbot.py` + `cli.py`
-- [ ] Manual E2E verification + commit
+### ☑ Phase 5 — Chatbot Orchestrator + CLI ✅
+- [x] Tests first: `test_chatbot.py` (25 tests: FAQ pass-through, single-turn + multi-turn booking, tech choice flows, failure messages, state management, reset command)
+- [x] `chatbot.py`: `Chatbot` class with `handle(message) -> str` as the single entry point; multi-turn state for pending booking + pending tech choice
+- [x] `cli.py`: REPL wrapper with welcome banner, help, reset, quit commands
+- [x] Parser enhancement: `unrecognized_trade` field on `ParsedIntent` so words like "carpenter" get a proper "we don't offer that" response instead of looping on the trade prompt
+- [x] Verification: 9 end-to-end scenarios manually validated (spec phrasing, tech choice, auto-book, name-based, FAQs, unsupported trade, no coverage, outside hours, double-booking)
+- [x] Commits: `test: add chatbot orchestrator tests for multi-turn conversation state`, `feat: add chatbot orchestrator and CLI`
 
 ### ☐ Phase 6 — FastAPI Web UI (~20 min) *[stretch]*
 - [ ] `web.py`: POST /chat + GET / (single HTML page)
