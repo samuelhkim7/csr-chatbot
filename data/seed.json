@@ -1,0 +1,33 @@
+{
+  "Location_Profiles": [
+    { "id": 4376, "name": "AirBnB", "address": "876 Paul Vista Apt. 335, San Francisco, CA, 94115" },
+    { "id": 7676, "name": "Primary Residence", "address": "13557 Mary Knoll Apt. 054, San Francisco, CA, 94117" },
+    { "id": 8050, "name": "Apartment Building", "address": "9865 Wayne Estate Suite 486, San Francisco, CA, 94133" },
+    { "id": 3743, "name": "Primary Residence", "address": "587 Ann Plains Suite 467, San Francisco, CA, 94119" },
+    { "id": 2238, "name": "Town House", "address": "11536 West Rest, San Francisco, CA, 94133" },
+    { "id": 5518, "name": "Primary Residence", "address": "65752 Mary Rest, San Francisco, CA, 94107" },
+    { "id": 6945, "name": "Primary Residence", "address": "95281 Joshua Courts, San Francisco, CA, 94111" },
+    { "id": 2608, "name": "Condo", "address": "1987 Kristen Corners, San Francisco, CA, 94115" },
+    { "id": 9499, "name": "Rental House", "address": "24241 Daniel Island Suite 627, San Francisco, CA, 94109" },
+    { "id": 5716, "name": "Primary Residence", "address": "736 Deborah Glens, San Francisco, CA, 94111" }
+  ],
+  "Customer_Profiles": [
+    { "id": 6945, "name": "Heather Russell", "contact": "(923)951-0044" },
+    { "id": 2238, "name": "Kathleen Callahan", "contact": "+1-671-151-1297" },
+    { "id": 5716, "name": "Paige Gonzalez", "contact": "9797283329" },
+    { "id": 4376, "name": "Justin Long", "contact": "295-629-0443" },
+    { "id": 7676, "name": "Kristi Alvarez", "contact": "415-828-2932" },
+    { "id": 2608, "name": "Michael Martinez", "contact": "415-683-2221" },
+    { "id": 8050, "name": "Joshua Huffman", "contact": "12134923920" },
+    { "id": 5518, "name": "Angela Calderon", "contact": "(970)711-9241" },
+    { "id": 3743, "name": "Bradley Landry", "contact": "(536)803-0974" },
+    { "id": 9499, "name": "Mark Haynes", "contact": "(980)634-9209" }
+  ],
+  "Technician_Profiles": [
+    { "id": 8886, "name": "Tina Orozco", "zones": ["94133", "94119"], "business_units": ["plumbing", "hvac"] },
+    { "id": 2564, "name": "Gregory Chen", "zones": ["94107", "94106"], "business_units": ["electrical", "plumbing"] },
+    { "id": 7549, "name": "Gina Garza", "zones": ["94113", "94120", "94119"], "business_units": ["plumbing"] },
+    { "id": 4697, "name": "Michael Page", "zones": ["94115", "94117", "94111", "94133"], "business_units": ["plumbing", "electrical"] },
+    { "id": 6608, "name": "Christopher Johnson", "zones": ["94115", "94118", "94107", "94101"], "business_units": ["electrical"] }
+  ]
+}
