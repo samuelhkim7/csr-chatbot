@@ -59,10 +59,12 @@ csr-chatbot/
 - [x] Verification: all 10/10/5 records loaded, customer/location IDs match 1:1, zip extraction fixed to use last-match
 - [x] Commits: `01f0ac7 test: add data loader and domain model tests`, `bba71ba feat: add domain models and JSON seed loader`
 
-### ☐ Phase 2 — Booking Engine (~30 min)
-- [ ] Tests first: `test_booking_engine.py` (incl. double-booking prevention)
-- [ ] `booking_engine.py`: `TRADE_ALIASES`, `BookingLedger`, `BookingEngine`
-- [ ] Verification + commit
+### ☑ Phase 2 — Booking Engine ✅
+- [x] Tests first: `test_booking_engine.py` (37 tests: trade aliases, ledger, matching, double-booking, tiebreak, failure cascade)
+- [x] `booking_engine.py`: `TRADE_ALIASES`, `normalize_trade`, `BookingLedger`, `BookingEngine`, `BookingStatus` enum, `BookingResult`
+- [x] Returns structured `BookingResult` (not bool) so chatbot layer can format messages
+- [x] Verification: end-to-end trace of 5 scenarios (happy, fallback, exhausted, no-coverage, unknown-trade)
+- [x] Commits: `test: add booking engine and ledger tests`, `feat: add booking engine with in-memory ledger`
 
 ### ☐ Phase 3 — Intent Parser (~25 min)
 - [ ] Tests first: `test_parser.py`
