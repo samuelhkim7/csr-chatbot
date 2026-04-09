@@ -88,10 +88,12 @@ csr-chatbot/
   - `refactor: enforce business hours, 1hr slot overlap, and multi-tech selection`
   - `test: expand parser tests for plural trades, zip+4, first-person phrasings`
 
-### ☐ Phase 4 — FAQ Handler (~10 min)
-- [ ] Tests first: `test_faq.py`
-- [ ] `faq.py`: pure functions
-- [ ] Verification + commit
+### ☑ Phase 4 — FAQ Handler ✅
+- [x] Tests first: `test_faq.py` (12 tests: locations/services content, friendly name mapping, empty seed graceful handling, determinism)
+- [x] `faq.py`: three pure functions — `answer_locations_question`, `answer_services_question`, `answer_unknown_question`
+- [x] Services mapped through `_SERVICE_DISPLAY_NAMES` (HVAC stays uppercase, others title-cased)
+- [x] Verification: actual responses printed and reviewed; 11 zones, 3 services, helpful unknown fallback
+- [x] Commits: `test: add FAQ handler tests`, `feat: add FAQ handler with derived locations and services`
 
 ### ☐ Phase 5 — Chatbot Orchestrator + CLI (~20 min)
 - [ ] Tests first: `test_chatbot.py`
