@@ -48,6 +48,11 @@ class ParsedIntent:
     #: but don't offer (e.g. "carpenter"). Lets the chatbot respond with
     #: "we don't offer X" instead of getting stuck prompting for the trade.
     unrecognized_trade: Optional[str] = None
+    #: Set when the user mentioned something date/time-ish we couldn't
+    #: parse as a real datetime (e.g. "wednesday", "tomorrow", "3pm").
+    #: Lets the chatbot prompt for the ISO format instead of silently
+    #: dropping the input.
+    unrecognized_datetime: Optional[str] = None
 
 
 # ---------- keyword tables ----------
@@ -95,6 +100,27 @@ _UNSUPPORTED_TRADE_WORDS: tuple[str, ...] = (
 _DATETIME_RE = re.compile(r"(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?)")
 _ZIP_RE = re.compile(r"\b(\d{5})\b")
 
+# Informal date/time hints we can't actually parse, but want to flag so
+# the chatbot can prompt for the ISO format instead of silently ignoring
+# them. Case-insensitive. Order matters: longer multi-word phrases come
+# first so "next week" wins over "week".
+_INFORMAL_DATETIME_PATTERNS: tuple[re.Pattern[str], ...] = (
+    # Multi-word relative ranges
+    re.compile(r"\b(next|this|last)\s+(week|weekend|month)\b", re.IGNORECASE),
+    # Days of the week (full and common short forms)
+    re.compile(
+        r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|"
+        r"mon|tues?|wed|thurs?|fri|sat|sun)\b",
+        re.IGNORECASE,
+    ),
+    # Relative day terms
+    re.compile(r"\b(today|tomorrow|tonight|yesterday)\b", re.IGNORECASE),
+    # AM/PM times like "3pm", "3:30 pm", "11:00 AM"
+    re.compile(r"\b\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)\b", re.IGNORECASE),
+    # Fuzzy times of day
+    re.compile(r"\b(morning|afternoon|evening|noon|midnight)\b", re.IGNORECASE),
+)
+
 
 # ---------- main entry point ----------
 
@@ -122,6 +148,9 @@ def parse(message: str, seed: SeedData) -> ParsedIntent:
     trade = _extract_trade(msg_lower)
     unrecognized_trade = _extract_unsupported_trade(msg_lower) if trade is None else None
     appointment_time = _extract_datetime(msg)
+    unrecognized_datetime = (
+        _extract_unrecognized_datetime(msg) if appointment_time is None else None
+    )
     zip_code = _extract_zip(msg)
     customer = _extract_customer(msg, seed)
     customer_name = customer.name if customer else None
@@ -134,8 +163,9 @@ def parse(message: str, seed: SeedData) -> ParsedIntent:
 
     anything_extracted = any((trade, appointment_time, zip_code, customer_name))
     has_booking_verb = any(v in msg_lower for v in _BOOKING_VERBS)
+    has_unrecognized_hint = unrecognized_trade is not None or unrecognized_datetime is not None
 
-    if not (anything_extracted or has_booking_verb or unrecognized_trade):
+    if not (anything_extracted or has_booking_verb or has_unrecognized_hint):
         return ParsedIntent(intent=Intent.UNKNOWN, raw_message=raw)
 
     booking_request = BookingRequest(
@@ -150,6 +180,7 @@ def parse(message: str, seed: SeedData) -> ParsedIntent:
         missing_fields=booking_request.missing_fields(),
         raw_message=raw,
         unrecognized_trade=unrecognized_trade,
+        unrecognized_datetime=unrecognized_datetime,
     )
 
 
@@ -202,6 +233,20 @@ def _extract_datetime(msg: str) -> Optional[datetime]:
         return datetime.fromisoformat(match.group(1))
     except ValueError:
         return None
+
+
+def _extract_unrecognized_datetime(msg: str) -> Optional[str]:
+    """Return the first informal date/time hint found, or None.
+
+    Called only when `_extract_datetime` returned None. Lets the chatbot
+    distinguish "user gave no date at all" from "user tried to give a
+    date but used a format we can't parse."
+    """
+    for pattern in _INFORMAL_DATETIME_PATTERNS:
+        match = pattern.search(msg)
+        if match:
+            return match.group(0)
+    return None
 
 
 def _extract_zip(msg: str) -> Optional[str]:

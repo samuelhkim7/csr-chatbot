@@ -88,17 +88,36 @@ class Chatbot:
 
         # Booking intent (possibly partial) or anything with extractable info.
         if parsed.intent is Intent.BOOKING and parsed.booking_request is not None:
-            return self._handle_booking(parsed.booking_request)
+            return self._handle_booking(
+                parsed.booking_request,
+                unrecognized_datetime=parsed.unrecognized_datetime,
+            )
 
         # Fall through: nothing we can do.
         return answer_unknown_question()
 
     # ---------- booking flow ----------
 
-    def _handle_booking(self, request: BookingRequest) -> str:
+    def _handle_booking(
+        self,
+        request: BookingRequest,
+        unrecognized_datetime: Optional[str] = None,
+    ) -> str:
         # Merge with pending booking (if any) — new values take priority.
         if self._pending_booking is not None:
             request = self._merge(self._pending_booking, request)
+
+        # If the user attempted an informal datetime (e.g. "wednesday",
+        # "3pm") and we don't already have a real appointment_time, flag
+        # it and prompt for the correct format. Save what we've got so
+        # far so the next message can complete the booking.
+        if unrecognized_datetime is not None and request.appointment_time is None:
+            self._pending_booking = request
+            return (
+                f"I saw '{unrecognized_datetime}' but I need an exact date "
+                f"and time. Please use the format YYYY-MM-DD HH:MM "
+                f"(for example, 2026-04-15 14:00)."
+            )
 
         # Incomplete? Save state and prompt for the next missing field.
         if not request.is_complete():

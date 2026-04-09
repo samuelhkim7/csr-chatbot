@@ -145,6 +145,52 @@ def test_parse_booking_invalid_datetime_not_extracted(seed):
     assert "appointment_time" in result.missing_fields
 
 
+# ---------- informal datetime detection ----------
+# The user sometimes types things like "wednesday" or "3pm" instead of
+# a full ISO datetime. The parser can't turn those into real datetimes,
+# but it should at least flag them so the chatbot can prompt for the
+# correct format instead of silently dropping the input.
+
+@pytest.mark.parametrize("msg,expected_hint", [
+    ("book a plumber at 94115 on wednesday", "wednesday"),
+    ("I need a plumber tomorrow", "tomorrow"),
+    ("book a plumber at 3pm", "3pm"),
+    ("need an electrician tonight", "tonight"),
+    ("book a plumber on monday", "monday"),
+    ("schedule a plumber next week", "next week"),
+    ("book me in the morning", "morning"),
+])
+def test_parse_detects_informal_datetime(seed, msg, expected_hint):
+    result = parse(msg, seed)
+    assert result.unrecognized_datetime is not None
+    assert expected_hint.lower() in result.unrecognized_datetime.lower()
+    # And appointment_time should still be None (we didn't parse it)
+    assert result.booking_request is None or result.booking_request.appointment_time is None
+
+
+def test_parse_iso_datetime_wins_over_informal(seed):
+    """If the user gives BOTH an ISO datetime and an informal hint,
+    the ISO wins and we don't flag the informal one."""
+    msg = "book a plumber at 94115 for 2026-04-15 14:00 on wednesday"
+    result = parse(msg, seed)
+    assert result.booking_request.appointment_time == datetime(2026, 4, 15, 14, 0)
+    assert result.unrecognized_datetime is None
+
+
+def test_parse_standalone_informal_datetime(seed):
+    """Bare follow-up like 'wednesday' should still classify as BOOKING
+    with unrecognized_datetime set, so the chatbot can re-prompt."""
+    result = parse("wednesday", seed)
+    assert result.intent is Intent.BOOKING
+    assert result.unrecognized_datetime == "wednesday"
+
+
+def test_parse_no_informal_datetime_when_none_present(seed):
+    """Regular messages without date hints should have None."""
+    result = parse("book a plumber at 94115", seed)
+    assert result.unrecognized_datetime is None
+
+
 # ---------- trade extraction (parametrized) ----------
 
 @pytest.mark.parametrize("msg,expected_trade", [
