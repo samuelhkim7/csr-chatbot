@@ -66,10 +66,27 @@ csr-chatbot/
 - [x] Verification: end-to-end trace of 5 scenarios (happy, fallback, exhausted, no-coverage, unknown-trade)
 - [x] Commits: `test: add booking engine and ledger tests`, `feat: add booking engine with in-memory ledger`
 
-### ☐ Phase 3 — Intent Parser (~25 min)
-- [ ] Tests first: `test_parser.py`
-- [ ] `parser.py`: intent classification, regex extraction, name resolution
-- [ ] Verification + commit
+### ☑ Phase 3 — Intent Parser ✅
+- [x] Tests first: `test_parser.py` (35 tests: FAQ classification, trade extraction, ISO datetime, zip, customer name resolution, partial parses, unknown intents)
+- [x] `parser.py`: `Intent` enum, `ParsedIntent` frozen dataclass, `parse(message, seed)` with regex + keyword matching
+- [x] Auto-resolves zip from customer name when zip is missing; explicit zip always wins
+- [x] Verification: 10 realistic phrases parsed manually end-to-end, all correct
+- [x] Fixed singular/plural FAQ marker collision (`"electrical service"` booking vs `"what services do you offer"` FAQ)
+- [x] Commits: `test: add intent parser tests`, `feat: add regex + keyword intent parser`
+
+### ☑ Phase 3.5 — Mid-Project Revision ✅
+*Triggered by check-in feedback. Expanded core behavior based on clarifications.*
+- [x] **Business hours 9:00–17:00 enforced.** New `BookingStatus.OUTSIDE_BUSINESS_HOURS`. Last valid start is 16:00 so the 1-hour slot ends exactly at close.
+- [x] **1-hour slot overlap.** Ledger's `is_available` now compares `|when - existing| < 1h` rather than exact-match set membership. Bookings at 14:00 and 14:30 conflict; 14:00 and 15:00 don't.
+- [x] **Multi-tech selection.** New `BookingStatus.MULTIPLE_CHOICES` carries a list of eligible technicians. `book()` has a new `preferred_technician_id` parameter for the user's pick. Auto-book still applies when exactly 1 tech is eligible.
+- [x] **Expanded trade vocabulary.** Plural forms (`plumbers`, `electricians`), slash form (`a/c`), abbreviation (`air con`) all added to `TRADE_ALIASES`.
+- [x] **ZIP+4 format.** `94115-1234` extracts `94115` (hyphen forms a regex word boundary — no code change needed, just a test).
+- [x] **First-person + standalone follow-up responses.** Parser already handled `"for me"` phrasing and bare `"94115"`/`"plumbing"` responses — verified with new tests. No impl change needed; the original design absorbed it.
+- [x] Tests: +16 new (10 engine, 6 parser). Total suite: 115 passing.
+- [x] Commits:
+  - `test: update booking engine tests for business hours and multi-tech selection`
+  - `refactor: enforce business hours, 1hr slot overlap, and multi-tech selection`
+  - `test: expand parser tests for plural trades, zip+4, first-person phrasings`
 
 ### ☐ Phase 4 — FAQ Handler (~10 min)
 - [ ] Tests first: `test_faq.py`

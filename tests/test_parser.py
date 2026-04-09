@@ -155,6 +155,11 @@ def test_parse_booking_invalid_datetime_not_extracted(seed):
     ("I need HVAC", "hvac"),
     ("need air conditioning service", "air conditioning"),
     ("heating repair please", "heating"),
+    # Expanded after mid-project feedback:
+    ("do you have plumbers available", "plumbers"),
+    ("I need electricians", "electricians"),
+    ("my a/c is broken", "a/c"),
+    ("need air con service", "air con"),
 ])
 def test_parse_trade_extraction(seed, msg, expected_trade):
     result = parse(msg, seed)
@@ -175,6 +180,61 @@ def test_parse_zip_not_confused_by_datetime_digits(seed):
     into the zip slot."""
     result = parse("book a plumber at 94115 for 2026-04-15 14:00", seed)
     assert result.booking_request.zip_code == "94115"
+
+
+def test_parse_zip_plus_four_format(seed):
+    """ZIP+4 format: '94115-1234' should extract the 5-digit prefix."""
+    result = parse("book a plumber at 94115-1234 for 2026-04-15 14:00", seed)
+    assert result.booking_request.zip_code == "94115"
+
+
+# ---------- first-person phrasings ----------
+
+def test_parse_first_person_booking(seed):
+    """Spec-style first-person phrasing should parse cleanly."""
+    msg = "Book a plumbing appointment for me on 2026-04-15 14:00"
+    result = parse(msg, seed)
+    assert result.intent is Intent.BOOKING
+    assert result.booking_request.trade == "plumbing"
+    assert result.booking_request.appointment_time == datetime(2026, 4, 15, 14, 0)
+    # No zip given → should be reported as missing
+    assert "zip_code" in result.missing_fields
+
+
+def test_parse_first_person_with_my(seed):
+    msg = "I need someone to fix my plumbing at 94115 on 2026-04-15 14:00"
+    result = parse(msg, seed)
+    assert result.intent is Intent.BOOKING
+    assert result.booking_request.trade == "plumbing"
+    assert result.booking_request.zip_code == "94115"
+
+
+# ---------- standalone follow-up responses ----------
+# The chatbot orchestrator re-prompts the user for missing fields. When
+# the user types a bare answer like "94115" or "plumbing", the parser
+# must still extract a partial BookingRequest so the orchestrator can
+# merge it with the pending booking.
+
+def test_parse_standalone_zip(seed):
+    """User responds to 'what is your zip code?' with '94115'."""
+    result = parse("94115", seed)
+    assert result.intent is Intent.BOOKING
+    assert result.booking_request.zip_code == "94115"
+    assert result.booking_request.trade is None
+
+
+def test_parse_standalone_trade(seed):
+    """User responds to 'what kind of service?' with 'plumbing'."""
+    result = parse("plumbing", seed)
+    assert result.intent is Intent.BOOKING
+    assert result.booking_request.trade == "plumbing"
+    assert result.booking_request.zip_code is None
+
+
+def test_parse_standalone_datetime(seed):
+    result = parse("2026-04-15 14:00", seed)
+    assert result.intent is Intent.BOOKING
+    assert result.booking_request.appointment_time == datetime(2026, 4, 15, 14, 0)
 
 
 # ---------- unknown intent ----------
