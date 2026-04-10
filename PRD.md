@@ -128,10 +128,16 @@ csr-chatbot/
 - No real NL understanding (regex + keywords only)
 - No real-time technician schedule data (availability = "not already booked")
 
+### ☑ Phase 7 — README & Polish ✅
+- [x] Full README with overview, quickstart (CLI + web), example interactions, architecture diagram, module responsibilities table, 7 key design decisions, **regex vs LLM tradeoff comparison table**, testing section, 10-item future work list, project structure
+- [x] `DEMO.md` — 14 sections of copy-pasteable CLI inputs that exercise every feature, ordered from simplest to most impressive, plus a 60-second smoke test
+- [x] Verification: ran the DEMO.md smoke test — every input produces the documented response
+- [x] Commit: `docs: add full README and DEMO walkthrough`
+
 ## Definition of Done
-- [ ] All tests pass (`pytest`)
-- [ ] CLI runs: happy path, no-availability, double-booking, name-based booking, both FAQs
-- [ ] Web UI runs (if Phase 6 reached)
-- [ ] README has quickstart + 3+ example interactions
-- [ ] PRD checklist fully ticked
-- [ ] Clean git history (one commit per phase)
+- [x] All tests pass (`pytest`) — **181 passing**
+- [x] CLI runs: happy path, no-availability, double-booking, name-based booking, both FAQs
+- [x] Web UI runs (Phase 6 reached)
+- [x] README has quickstart + example interactions + architecture + design decisions + parser tradeoffs
+- [x] PRD checklist fully ticked
+- [x] Clean git history (one `test:` + `feat:`/`fix:`/`refactor:` pair per phase, plus `docs:` commits)
