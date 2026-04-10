@@ -103,10 +103,19 @@ csr-chatbot/
 - [x] Verification: 9 end-to-end scenarios manually validated (spec phrasing, tech choice, auto-book, name-based, FAQs, unsupported trade, no coverage, outside hours, double-booking)
 - [x] Commits: `test: add chatbot orchestrator tests for multi-turn conversation state`, `feat: add chatbot orchestrator and CLI`
 
-### ☐ Phase 6 — FastAPI Web UI (~20 min) *[stretch]*
-- [ ] `web.py`: POST /chat + GET / (single HTML page)
-- [ ] TestClient smoke test
-- [ ] Manual browser verification + commit
+### ☑ Phase 5.5 — Follow-on Polish ✅
+*Small improvements driven by check-in feedback and self-testing.*
+- [x] **Informal datetime detection** (`"wednesday"`, `"3pm"`, `"tomorrow"`) — parser flags, chatbot prompts for ISO. Preserves partial state across the re-prompt.
+- [x] **Next available slot suggestion** — `BookingEngine.find_next_available_slot` iterates hour-by-hour within business hours for up to 7 days; chatbot's `ALL_BOOKED` message now includes "The next available time is X" when a suggestion can be found.
+- [x] Commits: `fix: detect informal datetimes`, `feat: suggest next available slot on double-booking`
+
+### ☑ Phase 6 — FastAPI Web UI ✅
+- [x] Tests first: `test_web.py` (8 tests: root HTML, POST /chat contract, validation errors, multi-turn state persistence, tech choice flow, state isolation between tests via dependency override)
+- [x] `web.py`: FastAPI app with `POST /chat` and `GET /`; module-level `Chatbot` singleton + `get_chatbot` dependency for test injection
+- [x] Single-page chat UI embedded as an HTML string constant (no separate static directory, no build step, vanilla JS)
+- [x] Pydantic `ChatRequest` / `ChatResponse` models for validation
+- [x] Verification: booted `uvicorn` on port 8765, confirmed GET / serves HTML and POST /chat returns correct replies for booking and FAQ
+- [x] Commits: `test: add FastAPI web UI smoke tests`, `feat: add FastAPI web UI with single-page chat`
 
 ### ☐ Phase 7 — README & Polish (~10 min)
 - [ ] Full README: quickstart, examples, architecture, design decisions, regex vs LLM tradeoffs, future work

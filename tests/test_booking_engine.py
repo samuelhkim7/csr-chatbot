@@ -334,3 +334,64 @@ def test_find_eligible_excludes_booked_techs(engine):
     )
     techs = engine.find_eligible_technicians(_req(trade="electrical", zip_code="94115", when=T0))
     assert [t.id for t in techs] == [6608]
+
+
+# ---------- find_next_available_slot ----------
+
+def test_find_next_available_slot_single_tech(engine):
+    """94117 plumber = Michael only. Book 14:00, next slot is 15:00."""
+    engine.book(_req(trade="plumber", zip_code="94117", when=T0))
+    next_slot = engine.find_next_available_slot(
+        _req(trade="plumber", zip_code="94117", when=T0)
+    )
+    assert next_slot == datetime(2026, 4, 15, 15, 0)
+
+
+def test_find_next_available_slot_multi_tech_returns_same_time(engine):
+    """94115 electrical has 2 techs. Book one, the other is still free
+    at the same time, so 'next available' should be the requested time."""
+    engine.book(
+        _req(trade="electrical", zip_code="94115", when=T0),
+        preferred_technician_id=4697,
+    )
+    next_slot = engine.find_next_available_slot(
+        _req(trade="electrical", zip_code="94115", when=T0)
+    )
+    # Christopher is still free at T0 — next available IS T0.
+    assert next_slot == T0
+
+
+def test_find_next_available_slot_rolls_to_next_day(engine):
+    """Book every valid slot in a day → next available should be 9am the next day."""
+    for hour in range(9, 17):  # 9, 10, ..., 16 = 8 slots
+        engine.book(_req(trade="plumber", zip_code="94117",
+                         when=datetime(2026, 4, 15, hour, 0)))
+    next_slot = engine.find_next_available_slot(
+        _req(trade="plumber", zip_code="94117", when=datetime(2026, 4, 15, 14, 0))
+    )
+    assert next_slot == datetime(2026, 4, 16, 9, 0)
+
+
+def test_find_next_available_slot_no_matching_techs_returns_none(engine):
+    """94999 has no coverage. No suggestion possible."""
+    next_slot = engine.find_next_available_slot(
+        _req(trade="plumber", zip_code="94999", when=T0)
+    )
+    assert next_slot is None
+
+
+def test_find_next_available_slot_unknown_trade_returns_none(engine):
+    next_slot = engine.find_next_available_slot(
+        _req(trade="carpenter", zip_code="94115", when=T0)
+    )
+    assert next_slot is None
+
+
+def test_find_next_available_slot_from_half_hour_rounds_up(engine):
+    """If requested time is 14:30, next available should be 15:00 (not 14:30)."""
+    engine.book(_req(trade="plumber", zip_code="94117",
+                     when=datetime(2026, 4, 15, 14, 0)))
+    next_slot = engine.find_next_available_slot(
+        _req(trade="plumber", zip_code="94117", when=datetime(2026, 4, 15, 14, 30))
+    )
+    assert next_slot == datetime(2026, 4, 15, 15, 0)

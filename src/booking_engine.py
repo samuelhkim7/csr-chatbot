@@ -181,6 +181,52 @@ class BookingEngine:
             key=lambda t: t.id,
         )
 
+    def find_next_available_slot(
+        self,
+        request: BookingRequest,
+        lookahead_days: int = 7,
+    ) -> Optional[datetime]:
+        """Find the next datetime a request could be fulfilled, or None.
+
+        Iterates hour-by-hour starting from (or just after) the requested
+        time, within business hours, across `lookahead_days` days. Returns
+        the first slot where at least one trade+zone-matching technician
+        is free.
+
+        If multiple techs serve the trade+zone and one is still free at
+        the requested time, this returns the requested time itself (the
+        caller presumably needs to know "when can this be done", and the
+        answer is "right now, another tech is available").
+        """
+        canonical = normalize_trade(request.trade) if request.trade else None
+        if canonical is None or not request.zip_code or not request.appointment_time:
+            return None
+
+        trade_zone_matches = [
+            t for t in self.seed.technicians
+            if canonical in t.business_units and request.zip_code in t.zones
+        ]
+        if not trade_zone_matches:
+            return None
+
+        # Starting point: the requested time, snapped to the hour. If the
+        # requested time had minutes (e.g. 14:30), jump forward to the
+        # next whole hour so suggestions land on clean slots.
+        start = request.appointment_time
+        current = start.replace(minute=0, second=0, microsecond=0)
+        if current < start:
+            current += timedelta(hours=1)
+
+        cutoff = start + timedelta(days=lookahead_days + 1)
+
+        while current < cutoff:
+            if _is_within_business_hours(current):
+                if any(self.ledger.is_available(t.id, current) for t in trade_zone_matches):
+                    return current
+            current += timedelta(hours=1)
+
+        return None
+
     def book(
         self,
         request: BookingRequest,

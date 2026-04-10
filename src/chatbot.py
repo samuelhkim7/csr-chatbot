@@ -282,10 +282,16 @@ class Chatbot:
                 if request.appointment_time
                 else "that time"
             )
-            return (
+            base = (
                 f"I'm sorry, all matching technicians are already booked "
-                f"for {time_str}. Please try a different time."
+                f"for {time_str}."
             )
+            # Suggest the next available slot if we can find one.
+            next_slot = self.engine.find_next_available_slot(request)
+            if next_slot is not None and next_slot != request.appointment_time:
+                next_str = next_slot.strftime("%A, %B %d at %I:%M %p")
+                return f"{base} The next available time is {next_str}."
+            return f"{base} Please try a different time."
         if status is BookingStatus.OUTSIDE_BUSINESS_HOURS:
             return (
                 "I'm sorry, we can only book appointments between "
